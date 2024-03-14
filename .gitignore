@@ -1,6 +1,7 @@
 # Database - ignore
 #
 # Database storage and backup
+/database/backup
 /database/db-data
 
 
