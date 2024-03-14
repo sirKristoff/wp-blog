@@ -1,3 +1,5 @@
+# Notes
+
 ## Up and Down Wordpress
 
 ```bash
@@ -17,13 +19,12 @@ pass: MYSQL_PASSWORD
 
 ## Configuring domain
 
-```
+```text
  ## Point subdomain to IP
 A record:  77.237.21.31
  ## Point subdomain to this same server
 CNAME record:  blog  pointer.ovh
 ```
-
 
 ## database
 
@@ -51,24 +52,26 @@ gzip --verbose --decompress --stdout \
   --host=database --port=3306 --compress
 ```
 
-
 ## Nginx
 
 ### docker container
 
 Run container:
+
 ```bash
 docker run -itd --name rproxy -p 80:80 nginx:latest
 ```
 
 ### Configuration
 
-Defaul configuration:
+Default configuration:
+
 ```bash
 /etc/nginx/conf.d/default.conf
 ```
 
 Validate configuration file:
+
 ```bash
  ## shell cmd
 nginx -t
@@ -77,6 +80,7 @@ docker exec nginx nginx -t
 ```
 
 Reload configuration:
+
 ```bash
  ## shell cmd
 nginx -s reload
@@ -87,17 +91,19 @@ docker exec nginx nginx -s reload
 ### Static sites
 
 Fragment of `/etc/nginx/conf.d/default.conf`:
-```conf
+
+```properties
     location / {
         root   /usr/share/nginx/html;
         index  index.html index.htm;
     }
 ```
 
-### Reverse proxy 
+### Reverse proxy
 
 Fragment of `/etc/nginx/conf.d/default.conf`:
-```conf
+
+```properties
     location /sample {
         proxy_pass http://127.0.0.1:8080/sample/;
     }
@@ -106,7 +112,8 @@ Fragment of `/etc/nginx/conf.d/default.conf`:
 ### subdomain reverse proxy
 
 Fragment of `/etc/nginx/conf.d/default.conf`:
-```conf
+
+```properties
 server {
     listen 80;
     server_name blog.pointer.ovh www.blog.pointer.ovh;
@@ -121,6 +128,7 @@ server {
 ```
 
 Example `index.html` file:
+
 ```html
 <h1>Hello from blog.pointer.ovh</h1>
 ```
@@ -128,7 +136,8 @@ Example `index.html` file:
 ### sites-available
 
 `/etc/nginx/sites-available/blog.pointer.ovh`:
-```conf
+
+```properties
 server {
 
     # Port 80 is used for incoming http requests
@@ -146,10 +155,10 @@ server {
 ```
 
 Activate site:
+
 ```bash
 ln -s '/etc/nginx/sites-available/blog.pointer.ovh'  '/etc/nginx/sites-enabled/'
 ```
-
 
 ### HTTPS
 
