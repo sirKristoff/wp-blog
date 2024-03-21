@@ -7,6 +7,12 @@ docker compose up
 docker compose down && docker volume prune -f
 ```
 
+## Docker logs
+
+```bash
+docker compose logs -f --tail 100
+```
+
 ### site backend
 
 `localhost:8080/wp-admin`
@@ -163,3 +169,72 @@ ln -s '/etc/nginx/sites-available/blog.pointer.ovh'  '/etc/nginx/sites-enabled/'
 ### HTTPS
 
 [YT](https://www.youtube.com/watch?v=MVuJ5h2YQoQ)
+
+## FTP
+
+### 1. Dockerizing `vsftpd`
+
+Create `vsftpd.conf` FTP configuration file e.q. copy from `/etc/vsftpd.conf`
+
+In configuration file modify:
+
+- `secure_chroot_dir=/var/run/vsftpd/empty` - comment
+- `seccomp_sandbox=NO` - add
+
+#### Docker file
+
+```docker
+FROM alpine:3.12
+
+RUN apk add vsftpd
+
+RUN adduser -D -h '/home/ftpuser' 'ftpuser'
+
+COPY 'vsftpd.conf' '/etc/vsftpd/vsftpd.conf'
+
+EXPOSE 20 21
+
+CMD [ "vsftpd", "/etc/vsftpd/vsftpd.conf" ]
+```
+
+#### Build docker image
+
+```bash
+ls './Dockerfile' './vsftpd.conf'
+docker build -t vsftpd '.'
+```
+
+#### Run docker container
+
+```bash
+docker run -p 20:20 -p 21:21 -d vsftpd
+```
+
+### 2. Public docker image `delfer/alpine-ftp-server`
+
+#### Docker-compose
+
+```yaml
+services:
+  ftp:
+    image: delfer/alpine-ftp-server
+    ports:
+      - 21:21
+      - 21000-21010:21000-21010
+    environment:
+      - USER=ftp_user|ftp_password|/home/ftp_user|10001
+    volumes:
+      - ./ftp-data:/home/ftp_user
+```
+
+#### Change privileges for _host_ FTP directory
+
+No other user will be able to read _home_ directory.
+
+```bash
+sudo chmod -R go-rx ./ftp-data
+```
+
+### 3. `garethflowers/ftp-server`
+
+[github](https://github.com/garethflowers/docker-ftp-server)
