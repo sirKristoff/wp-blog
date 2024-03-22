@@ -2,7 +2,7 @@
 #
 # Database storage and backup
 /database/backup
-/database/db-data
+/database/data
 
 
 # Reverse Proxy - ignore
@@ -18,44 +18,44 @@
 #
 # Note: if you want to stage/commit WP core files
 # you can delete this whole section/until Configuration.
-/wordpress/wp-admin/
-/wordpress/wp-content/index.php
-/wordpress/wp-content/languages
-/wordpress/wp-content/plugins/index.php
-/wordpress/wp-content/themes/index.php
-/wordpress/wp-includes/
-/wordpress/index.php
-/wordpress/license.txt
-/wordpress/readme.html
-/wordpress/wp-*.php
-/wordpress/xmlrpc.php
+/blogpage/wp-admin/
+/blogpage/wp-content/index.php
+/blogpage/wp-content/languages
+/blogpage/wp-content/plugins/index.php
+/blogpage/wp-content/themes/index.php
+/blogpage/wp-includes/
+/blogpage/index.php
+/blogpage/license.txt
+/blogpage/readme.html
+/blogpage/wp-*.php
+/blogpage/xmlrpc.php
 
 # Configuration
 wp-config.php
 
 # Example themes
-/wordpress/wp-content/themes/twenty*/
+/blogpage/wp-content/themes/twenty*/
 
 # Example plugin
-/wordpress/wp-content/plugins/hello.php
+/blogpage/wp-content/plugins/hello.php
 
 # Uploads
-/wordpress/wp-content/uploads/
+/blogpage/wp-content/uploads/
 
 # Log files
 *.log
 
 # htaccess
-/wordpress/.htaccess
+/blogpage/.htaccess
 
 # All plugins
 #
 # Note: If you wish to whitelist plugins,
 # uncomment the next line
-#/wordpress/wp-content/plugins
+#/blogpage/wp-content/plugins
 
 # All themes
 #
 # Note: If you wish to whitelist themes,
 # uncomment the next line
-#/wordpress/wp-content/themes
+#/blogpage/wp-content/themes

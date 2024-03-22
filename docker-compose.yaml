@@ -1,64 +1,105 @@
 version: "3.1"
-name: "wp"
+name: "zblog"
 
 services:
   database:
-    # container_name: wp-database
+    container_name: ${COMPOSE_PROJECT_NAME}-database
+    image: mariadb:${MARIADB_VERSION}
     mem_limit: 2048m
-    image: mariadb:10.6.4-focal
-    restart: unless-stopped
-    ports:
-      - 3306:3306
     env_file: .env
     environment:
-      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
-      MYSQL_DATABASE: '${MYSQL_DATABASE}'
-      MYSQL_USER: '${MYSQL_USER}'
-      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
     volumes:
-      - db-data:/var/lib/mysql
+      - "database-data:${MARIADB_CONTAINER_DATA_DIR}"
+      - "database-log:${MARIADB_CONTAINER_LOG_DIR}"
+      # - "${MARIADB_HOST_CONF}:${MARIADB_CONTAINER_CONF}"
+      # - "database-conf:${MARIADB_CONTAINER_CONF}"
+      - "database-init:${MARIADB_CONTAINER_INIT}"
     networks:
-      - wordpress-network
+      - ${COMPOSE_PROJECT_NAME}-network
+    ports:
+      - "${MARIADB_HOST_PORT}:${MARIADB_CONTAINER_PORT}"
+    restart: unless-stopped
 
-  phpmyadmin:
-    # container_name: wp-phpmyadmin
+  dbadmin:
+    container_name: ${COMPOSE_PROJECT_NAME}-dbadmin
+    image: phpmyadmin/phpmyadmin
     depends_on:
       - database
-    image: phpmyadmin/phpmyadmin
-    restart: unless-stopped
-    ports:
-      - 8081:80
     env_file: .env
     environment:
       PMA_HOST: database
-      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
     networks:
-      - wordpress-network
-    # profiles:
-    #   - tools
+      - ${COMPOSE_PROJECT_NAME}-network
+    ports:
+      - "${PHPMYADMIN_HOST_PORT}:${PHPMYADMIN_CONTAINER_PORT}"
+    restart: unless-stopped
+    profiles:
+      - tools
 
-  wordpress:
-    # container_name: wp-wordpress
+  blogpage:
+    container_name: ${COMPOSE_PROJECT_NAME}-blogpage
+    image: wordpress:${WORDPRESS_VERSION}
     depends_on:
       - database
-    image: wordpress:6.2.2-apache
-    restart: unless-stopped
-    ports:
-      - 8080:80
     env_file: .env
     environment:
-      WORDPRESS_DB_HOST: database:3306
-      WORDPRESS_DB_NAME: '${MYSQL_DATABASE}'
-      WORDPRESS_DB_USER: '${MYSQL_USER}'
-      WORDPRESS_DB_PASSWORD: '${MYSQL_PASSWORD}'
+      WORDPRESS_DB_HOST: "database:${MARIADB_CONTAINER_PORT}"
+      WORDPRESS_DB_NAME: "${MYSQL_DATABASE}"
+      WORDPRESS_DB_USER: "${MYSQL_USER}"
+      WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}"
     volumes:
-      - ./wordpress/wp-content/:/var/www/html/wp-content
+      - "blogpage-wpcontent:${WORDPRESS_CONTAINER_WPCONTENT}"
     networks:
-      - wordpress-network
+      - ${COMPOSE_PROJECT_NAME}-network
+    ports:
+      - "${WORDPRESS_HOST_PORT}:${WORDPRESS_CONTAINER_PORT}"
+    restart: unless-stopped
+
 
 volumes:
-  db-data:
+  database-data:
+    # name: ${COMPOSE_PROJECT_NAME}_database-data
+    # driver: local
+    # driver_opts:
+    #   o: bind
+    #   type: none
+    #   device: "${MARIADB_HOST_DATA_DIR}"
+  database-log:
+    # name: ${COMPOSE_PROJECT_NAME}_database-log
+    # driver: local
+    # driver_opts:
+    #   o: bind
+    #   type: none
+    #   device: "${MARIADB_HOST_LOG_DIR}"
+  # database-conf:
+  #   name: ${COMPOSE_PROJECT_NAME}_database-conf
+  #   driver: local
+  #   driver_opts:
+  #     o: bind
+  #     type: none
+  #     device: "${MARIADB_HOST_CONF}"
+  database-init:
+    # name: ${COMPOSE_PROJECT_NAME}_database-init
+    # driver: local
+    # driver_opts:
+    #   o: bind
+    #   type: none
+    #   device: "${MARIADB_HOST_INIT}"
+  blogpage-wpcontent:
+    name: ${COMPOSE_PROJECT_NAME}_blogpage-wpcontent
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: "${WORDPRESS_HOST_WPCONTENT}"
+
 
 networks:
-  wordpress-network:
+  zblog-network:
+    name: zblog-network
     driver: bridge
