@@ -1,0 +1,34 @@
+version: "3.1"
+name: "proxy"
+
+services:
+  nginx:
+    container_name: ${COMPOSE_PROJECT_NAME}-nginx
+    image: nginx:${NGINX_VERSION}
+    # depends_on: # TODO:
+    #   - blogpage
+    env_file: .env
+    environment:
+      # TODO:
+    volumes:
+      # TODO:
+      # - "${NGINX_HOST_ETC}:${NGINX_CONTAINER_ETC}:ro" 
+      # - "${NGINX_HOST_WEB_ROOT}:${NGINX_CONTAINER_WEB_ROOT}:ro"
+      # - "${NGINX_HOST_CERTS_DIR}:${NGINX_CONTAINER_CERTS_DIR}:ro" # TODO: move to secrets
+      # - "${NGINX_HOST_LOG_DIR}:${NGINX_CONTAINER_LOG_DIR}"
+      # - "${NGINX_HOST_CACHE}:${NGINX_CONTAINER_CACHE}"
+      # - "${NGINX_HOST_RUN}:${NGINX_CONTAINER_RUN}"
+    networks:
+      - ${COMPOSE_PROJECT_NAME}-network
+      - zblog-network
+    ports:
+      # TODO:
+
+    restart: unless-stopped
+
+volumes:
+
+
+networks:
+  proxy-network:
+  zblog-network:

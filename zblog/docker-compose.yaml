@@ -8,10 +8,10 @@ services:
     mem_limit: 2048m
     env_file: .env
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}" # TODO: move to secrets
       MYSQL_DATABASE: "${MYSQL_DATABASE}"
       MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}" # TODO: move to secrets
     volumes:
       - "database-data:${MARIADB_CONTAINER_DATA_DIR}"
       - "database-log:${MARIADB_CONTAINER_LOG_DIR}"
@@ -32,7 +32,7 @@ services:
     env_file: .env
     environment:
       PMA_HOST: database
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}" # TODO: move to secrets
     networks:
       - ${COMPOSE_PROJECT_NAME}-network
     ports:
@@ -51,7 +51,7 @@ services:
       WORDPRESS_DB_HOST: "database:${MARIADB_CONTAINER_PORT}"
       WORDPRESS_DB_NAME: "${MYSQL_DATABASE}"
       WORDPRESS_DB_USER: "${MYSQL_USER}"
-      WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}"
+      WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}" # TODO: move to secrets
     volumes:
       - "blogpage-wpcontent:${WORDPRESS_CONTAINER_WPCONTENT}"
     networks:
