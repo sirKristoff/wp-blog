@@ -8,16 +8,19 @@ services:
     mem_limit: 2048m
     env_file: .env
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}" # TODO: move to secrets
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
       MYSQL_DATABASE: "${MYSQL_DATABASE}"
       MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}" # TODO: move to secrets
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql-password
+    secrets:
+      - mysql-root-password
+      - mysql-password
+    configs:
+      - source: database-mariadb.cnf
+        target: /etc/mysql/mariadb.cnf
     volumes:
       - "database-data:${MARIADB_CONTAINER_DATA_DIR}"
       - "database-log:${MARIADB_CONTAINER_LOG_DIR}"
-      # - "${MARIADB_HOST_CONF}:${MARIADB_CONTAINER_CONF}"
-      # - "database-conf:${MARIADB_CONTAINER_CONF}"
-      - "database-init:${MARIADB_CONTAINER_INIT}"
     networks:
       - ${COMPOSE_PROJECT_NAME}-network
     ports:
@@ -32,7 +35,9 @@ services:
     env_file: .env
     environment:
       PMA_HOST: database
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}" # TODO: move to secrets
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
+    secrets:
+      - mysql-root-password
     networks:
       - ${COMPOSE_PROJECT_NAME}-network
     ports:
@@ -51,7 +56,9 @@ services:
       WORDPRESS_DB_HOST: "database:${MARIADB_CONTAINER_PORT}"
       WORDPRESS_DB_NAME: "${MYSQL_DATABASE}"
       WORDPRESS_DB_USER: "${MYSQL_USER}"
-      WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}" # TODO: move to secrets
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/mysql-password
+    secrets:
+      - mysql-password
     volumes:
       - "blogpage-wpcontent:${WORDPRESS_CONTAINER_WPCONTENT}"
     networks:
@@ -59,6 +66,18 @@ services:
     ports:
       - "${WORDPRESS_HOST_PORT}:${WORDPRESS_CONTAINER_PORT}"
     restart: unless-stopped
+
+
+secrets:
+  mysql-root-password:
+    file: ./secrets/mysql-root-password.psw
+  mysql-password:
+    file: ./secrets/mysql-password.psw
+
+
+configs:
+  database-mariadb.cnf:
+    file: ./database/conf/mariadb.cnf
 
 
 volumes:
@@ -76,20 +95,6 @@ volumes:
     #   o: bind
     #   type: none
     #   device: "${MARIADB_HOST_LOG_DIR}"
-  # database-conf:
-  #   name: ${COMPOSE_PROJECT_NAME}_database-conf
-  #   driver: local
-  #   driver_opts:
-  #     o: bind
-  #     type: none
-  #     device: "${MARIADB_HOST_CONF}"
-  database-init:
-    # name: ${COMPOSE_PROJECT_NAME}_database-init
-    # driver: local
-    # driver_opts:
-    #   o: bind
-    #   type: none
-    #   device: "${MARIADB_HOST_INIT}"
   blogpage-wpcontent:
     name: ${COMPOSE_PROJECT_NAME}_blogpage-wpcontent
     driver: local
@@ -101,5 +106,5 @@ volumes:
 
 networks:
   zblog-network:
-    name: zblog-network
+    name: ${COMPOSE_PROJECT_NAME}-network
     driver: bridge

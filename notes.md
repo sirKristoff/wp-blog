@@ -1,17 +1,145 @@
 # Notes
 
-## Up and Down Wordpress
+## `docker` commands
+
+### Up and Down `compose`
 
 ```bash
 docker compose up
 docker compose down && docker volume prune -f
 ```
 
-## Docker logs
+### Docker logs
 
 ```bash
 docker compose logs -f --tail 100
 ```
+
+### Secrets
+
+#### [_How to use secrets in Docker Compose_](https://docs.docker.com/compose/use-secrets/)
+
+```yaml
+services:
+  database:
+    environment:
+                                # \/ path where secret is mounted in container
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql-password
+    secrets:
+      - mysql-root-password   # name of the secret which service gets access to
+      - mysql-password
+
+secrets:
+  mysql-root-password:
+    file: ../secrets/mysql-root-password.psw   # path to secret file on HOST filesystem
+  mysql-password: # \/ name of environment variable which content will be assigned to the secret
+    environment: "MYSQL_PASSWORD"
+```
+
+#### [_Unsupported external secret_](https://github.com/docker/compose/issues/9139)
+
+Docker Compose is targeting raw engine (not swarm mode) so does not support secrets created on swarm. Engine does not support secrets, so compose only can be used with "pseudo-secrets" as bind mounts.
+
+To deploy a compose file to a Swarm cluster, you must use `docker stack` command.
+
+### Configs
+
+The location of the mount point within the container defaults to `/<config-name>` in Linux containers.
+
+The source of the config is either `file` or `external`.
+
+- **`file`**: The config is created with the contents of the file at the specified path.
+- **`environment`**: The config content is created with the value of an environment variable.
+- **`content`**: The content is created with the inlined value.
+- **`external`**: If set to `true`, `external` specifies that this config has already been created. Compose does not attempt to create it, and if it does not exist, an error occurs.
+- **`name`**: The name of the config object in the container engine to look up. This field can be used to reference configs that contain special characters. The name is used as is and will not be scoped with the project name.
+
+#### [_Service's configs element_](https://docs.docker.com/compose/compose-file/05-services/#configs)
+
+```yaml
+services:
+  database:
+    configs:
+      - source: database-mariadb.cnf     # Config name
+        target: /etc/mysql/mariadb.cnf   # Container path
+
+configs:
+  database-mariadb.cnf:
+    file: ./database/conf/mariadb.cnf    # Host path
+```
+
+#### [_Configs top-level elements_](https://docs.docker.com/compose/compose-file/08-configs/)
+
+```yaml
+configs:
+  app_config:   # \/ inlined value of config
+    content: |
+      debug=${DEBUG}
+      spring.application.admin.enabled=${DEBUG}
+      spring.application.name=${COMPOSE_PROJECT_NAME}
+```
+
+```yaml
+configs:
+  http_config:
+    external: true    # config has already been created by other entity
+    name: "${HTTP_CONFIG_KEY}"   # the name of config object to look up
+```
+
+### Compose Develop
+
+```yaml
+services:
+  nginx:
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./nginx/etc/conf.d
+          target: /etc/nginx/conf.d
+
+  wordpress:
+    develop:
+      watch:
+        # sync static content
+        - action: sync
+          path: ./webapp/html
+          target: /var/www/html
+          ignore:
+            - wp-admin/
+
+```
+
+The `watch` attribute defines a list of rules that control automatic service updates based on local file changes.
+
+`action` defines the action to take when changes are detected. If action is set to:
+
+- **`rebuild`**, Compose rebuilds the service image based on the `build` section and recreates the service with the updated image.
+  `rebuild` is ideal for compiled languages or as fallbacks for modifications to particular files that require a full image rebuild (e.g. `package.json`).
+- **`sync`**, Compose keeps the existing service container(s) running, but synchronizes source files with container content according to the `target` attribute.
+  `sync` is ideal for frameworks that support _"Hot Reload"_
+- **`sync+restart`**, Compose synchronizes source files with container content according to the `target` attribute, and then restarts the container.
+  `sync+restart` is ideal when config file changes, and you don't need to rebuild the image but just restart the main process of the service containers. It will work well when you update a database configuration or your `nginx.conf` file.
+
+The `ignore` attribute can be used to define a list of patterns for paths to be ignored.
+
+`path` attribute defines the path to source code (relative to the project directory) to monitor for changes. Updates to any file inside the path, which doesn't match any `ignore` rule, triggers the configured action.
+
+### Copying files
+
+#### Copy one file
+
+```bash
+docker cp 'database':'/etc/mysql/mariadb.conf'  './database/conf/mariadb.conf'
+```
+
+#### Copy recursively
+
+```bash
+docker cp 'database':'/etc/mysql/mariadb.conf.d/.'  './database/conf/mariadb.conf.d'
+```
+
+## Wordpress
 
 ### site backend
 
